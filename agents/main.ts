@@ -4,6 +4,7 @@ import readline from "readline/promises";
 import { stdout as output, stdin as input } from "process";
 import { promisify } from "util";
 import skill from "./skill";
+import routing from "./routing";
 
 const execAsync = promisify(exec);
 
@@ -94,11 +95,19 @@ async function main() {
   while (true) {
     let userMessage = await rl.question("> ");
 
+    const { success, result, error: routingError } = await routing(userMessage);
+    console.log(
+      "============= routing response ",
+      success,
+      result,
+      routingError,
+    );
+
     while (true) {
       context.push({ role: "user", parts: [{ text: userMessage }] });
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: success ? result : "gemini-3.5-flash",
         contents: context,
         config: {
           tools: [{ functionDeclarations: [bashFunction, skillFunction] }],
